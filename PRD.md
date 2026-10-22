@@ -6,7 +6,7 @@
 **Stakeholders:** 5인 팀 (팀원 A~E, 역할은 10장 참고)
 **Date Created:** 2026-10-22
 **Last Updated:** 2026-10-22
-**Version:** 0.5
+**Version:** 0.6
 
 ---
 
@@ -137,7 +137,7 @@ So that 무엇을 할 수 있는 앱인지 바로 이해하고 원하는 페이�
 **Priority:** P0 / **Effort:** M
 
 ##### A-2. 메뉴 내비게이션 [P0]
-- [ ] 하단 탭(모바일) 또는 사이드 메뉴(데스크톱)로 홈 + 5개 서비스를 이동할 수 있다.
+- [ ] `st.navigation`(사이드바 또는 상단 메뉴)으로 홈 + 5개 서비스를 이동할 수 있다.
 - [ ] 현재 위치한 메뉴가 시각적으로 구분된다.
 
 **Priority:** P0 / **Effort:** S
@@ -181,7 +181,7 @@ So that 메뉴 고민 시간을 줄일 수 있다.
 
 ### Epic C: 독서 챌린지
 
-**Owner:** 팀원 B (Open Library 연동·독서 기록 포함. 홈 요약 카드용 `getTodaySummary()`를 팀원 A에게 제공)
+**Owner:** 팀원 B (Open Library 연동·독서 기록 포함. 홈 요약 카드용 `get_today_summary()`를 팀원 A에게 제공)
 
 ##### C-1. 오늘의 책 추천 [P0]
 ```
@@ -254,7 +254,7 @@ So that 기록하는 것 자체가 즐거운 일이 된다.
 
 ### Epic E: JOOYOU
 
-**Owner:** 팀원 D (오피넷 프록시·일별 평균가 스냅샷 포함)
+**Owner:** 팀원 D (오피넷 연동·일별 평균가 스냅샷 포함)
 
 ##### E-1. 반경 주유소 가격 조회 [P0]
 ```
@@ -292,7 +292,7 @@ So that 가까우면서 싼 주유소를 고를 수 있다.
 ##### F-1. 오늘 날씨 [P0]
 - [ ] 현재 위치의 현재 기온, 체감온도, 강수 여부, 최고/최저 기온, 시간대별 예보를 보여준다.
 - [ ] 병합 후 홈과 오늘의 한 끼가 같은 날씨 데이터를 공유한다. (중복 호출 금지, 캐시 10분)
-- [ ] 날씨 조회는 `getWeather(lat, lng)` 한 함수로 감싸 다른 페이지가 그대로 가져다 쓸 수 있게 한다.
+- [ ] 날씨 조회는 `get_weather(lat, lng)` 한 함수로 감싸 다른 페이지가 그대로 가져다 쓸 수 있게 한다.
 
 **Priority:** P0 / **Effort:** M
 
@@ -329,7 +329,7 @@ So that 아침에 옷 고르는 시간을 줄이고 날씨에 맞게 입을 수 
 | FR-011 | 주유 기록 CRUD | Must Have | Open |
 | FR-012 | 내 주유 가격 vs 지역 평균 비교 | Must Have | Open |
 | FR-013 | 날씨 상세 및 체감온도 기반 코디 추천 | Must Have | Open |
-| FR-014 | 위치 권한 거부 시 수동 지역 선택 | Should Have | Open |
+| FR-014 | 수동 지역 선택 (Streamlit에는 브라우저 위치 조회 내장 기능이 없어 기본 입력 수단) | Must Have | Open |
 | FR-015 | 데이터 내보내기(JSON) | Nice to Have | Open |
 
 ### Non-Functional Requirements
@@ -339,10 +339,10 @@ So that 아침에 옷 고르는 시간을 줄이고 날씨에 맞게 입을 수 
 | NFR-001 | Performance | 홈 최초 표시(LCP, 4G 모바일) | 2.5초 이내 |
 | NFR-002 | Performance | 외부 API 호출 타임아웃 및 폴백 | 5초, 실패 시 카드 단위 폴백 |
 | NFR-003 | Reliability | 외부 API 응답 캐시 | 날씨 10분, 주유소 30분, 책 24시간 |
-| NFR-004 | Security | API 키 클라이언트 노출 금지 | 서버(프록시)에서만 보관 |
+| NFR-004 | Security | API 키를 화면·로그·저장소에 노출 금지 | `st.secrets`로만 읽기, `secrets.toml` 미커밋 |
 | NFR-005 | Privacy | 위치 정보 저장 | 조회 시에만 사용, 정밀 좌표 영구 저장 금지 |
 | NFR-006 | Accessibility | 색 대비 및 터치 영역 | 본문 대비 4.5:1 이상, 터치 영역 44px 이상 |
-| NFR-007 | Compatibility | 지원 브라우저 | 최신 Chrome·Safari·Samsung Internet 2개 메이저 버전 |
+| NFR-007 | Compatibility | 지원 브라우저·런타임 | 최신 Chrome·Safari·Samsung Internet 2개 메이저 버전, 서버 Python 3.14 |
 
 ---
 
@@ -352,8 +352,8 @@ So that 아침에 옷 고르는 시간을 줄이고 날씨에 맞게 입을 수 
 
 **Phase 1 (MVP):**
 - 홈 + 5개 서비스 페이지의 P0 스토리 전체
-- 이 서비스는 로그인 없이 기기 로컬 저장소로 시작 (가정)
-- 모바일 우선 반응형 웹
+- 로그인 없이 시작 (저장 방식은 13장 미정 항목이며, 방식에 따라 사용자 구분이 필요해질 수 있음)
+- Python 3.14 + Streamlit 웹앱을 Streamlit Community Cloud에 배포, 모바일 우선 화면 구성
 
 **Phase 2 (Post-MVP):**
 - 스트릭, 단골 레벨 (D-3, D-4)
@@ -376,37 +376,47 @@ So that 아침에 옷 고르는 시간을 줄이고 날씨에 맞게 입을 수 
 ## 7. Technical Considerations
 
 ### High-Level Architecture
-정적 프론트엔드(SPA)와 얇은 서버리스 프록시로 구성한다. 외부 API 키는 프록시에만 두고, 사용자 데이터(기록)는 MVP에서 브라우저 로컬 저장소(IndexedDB)에 둔다.
+Python 3.14로 작성한 Streamlit 앱 하나로 구성한다. 외부 API는 서버(Python)에서 직접 호출하고, 키는 `st.secrets`에서만 읽어 브라우저로 나가지 않게 한다. 기록 저장 방식은 미정이다(13장).
 
 ```
-[Browser SPA] ──> [Serverless Proxy + Cache] ──> Weather / Kakao Local / Open Library / Opinet / 공공 음식 데이터
-      │
- IndexedDB (끼니·독서·도감·주유 기록)
+[Browser] <──> [Streamlit 앱 (Python 3.14)] ──> Weather / Kakao Local / Open Library / Opinet / 공공 음식 데이터
+                      │
+              [저장소: 미정] (끼니·독서·도감·주유 기록)
 ```
 
 ### 독립 개발 후 병합 구조
 각자 자기 페이지를 따로 완성하고 마지막에 한 앱으로 합친다. 합칠 때 충돌하지 않도록 아래 규칙을 1주차에 정하고 모두가 지킨다.
 
-- **서비스 폴더 분리:** `features/meal`(A), `features/reading`(B), `features/guest`(C), `features/fuel`(D), `features/weather`(E)처럼 서비스마다 폴더를 나눠 자기 폴더 밖의 파일은 건드리지 않는다. 홈과 공통 코드(`shared/`)는 팀원 A가 관리한다.
-- **병합 단위(각 서비스가 지켜야 할 출력 형태):** 각 `features/<서비스>/index.ts`는 아래 3가지만 밖으로 내보낸다.
-  - `Page` — 해당 서비스의 페이지 컴포넌트
-  - `routes` — 이 서비스의 경로 정의 (예: `/meal`, `/reading`)
-  - `getTodaySummary()` — 홈 요약 카드에 쓸 오늘 상태 한 줄 (예: `{ title, value, status }`)
-- **혼자서도 실행되는 개발 환경:** 서비스마다 단독 실행 진입점(`features/<서비스>/dev.tsx` 등)을 두고, 다른 서비스가 있어야 하는 입력은 목(mock)으로 대체한다.
-  - 한 끼(A): 날씨 → 목 날씨 데이터 (병합 시 팀원 E의 `getWeather(lat, lng)`로 교체)
-  - 손님(C): 끼니 기록 이벤트 → 테스트 버튼 (병합 시 `meal_logged { mealLogId, slot, date }` 구독으로 교체)
-  - 홈(A): 각 서비스 요약 → 목 요약 (병합 시 각 서비스의 `getTodaySummary()` 호출)
-- **디자인 토큰 먼저 배포:** 팀원 A가 색·글꼴·간격·둥근 정도·공통 버튼과 카드 컴포넌트를 11-05까지 먼저 배포한다. 각자 이 토큰만 사용하고 색상·글꼴을 직접 적지 않는다. 그래야 합쳤을 때 화면이 따로 놀지 않는다.
-- **저장소 이름 충돌 방지:** 브라우저 저장소(IndexedDB) 테이블과 로컬 저장 키에 서비스 접두사를 붙인다 (`meal_`, `reading_`, `guest_`, `fuel_`, `weather_`).
-- **서버(프록시) 코드:** 각자 `api/<서비스>/` 폴더에 자기 서비스의 엔드포인트만 만든다. API 키 이름은 서비스별로 구분하고(`KAKAO_REST_KEY`, `OPINET_KEY`, `WEATHER_KEY` 등), 병합 시 한 프로젝트의 환경변수로 합친다.
-- **패키지 의존성:** 새 라이브러리를 추가할 때는 팀 채팅에 먼저 알리고, 같은 용도의 라이브러리는 하나만 쓴다 (병합 시 버전 충돌 방지).
-- **저장소:** 이 `diary` Git 저장소 하나를 사용한다. 팀원 A가 1주차에 프로젝트 기본 골격(빈 앱, `shared/` 디자인 토큰 자리, 서비스별 빈 폴더, `.gitignore`, `.env.example`)을 `main`에 먼저 올리고, 나머지 팀원은 이를 받아 자기 브랜치를 만든다. API 키(`.env`)는 커밋하지 않는다.
-- **브랜치 전략:** `main` 보호, 서비스별 `feature/<서비스>` 브랜치에서 개발하고 병합 단계에서 순서대로 `main`에 합친다. 브랜치는 `main`에서 자주(주 1회 이상) 최신 내용을 받아와 병합 때 차이가 커지지 않게 한다. 병합 순서는 홈 → 날씨(E) → 한 끼(A) → 손님(C) → 독서(B) → JOOYOU(D)로 하되, 의존이 적은 순서로 조정할 수 있다.
+- **서비스 패키지 분리:** `features/meal`(A), `features/reading`(B), `features/guest`(C), `features/fuel`(D), `features/weather`(E)처럼 서비스마다 패키지를 나눠 자기 폴더 밖의 파일은 건드리지 않는다. 홈(`app.py`)과 공통 코드(`shared/`, `.streamlit/config.toml`)는 팀원 A가 관리한다.
+- **병합 단위(각 서비스가 지켜야 할 출력 형태):** 각 `features/<서비스>/__init__.py`는 아래 3가지만 밖으로 내보낸다.
+  - `page()` — 해당 서비스의 페이지를 그리는 함수. 홈의 `app.py`가 `st.Page(page, title=..., url_path=...)`로 등록한다.
+  - `ROUTE` — 이 서비스의 `url_path` (`meal`, `reading`, `guest`, `fuel`, `weather`)
+  - `get_today_summary()` — 홈 요약 카드에 쓸 오늘 상태 한 줄 (예: `{"title", "value", "status"}`)
+- **`st.set_page_config`는 `app.py`와 단독 실행 파일(`dev.py`)에서만 부른다.** 서비스의 `page()` 안에서는 부르지 않는다. 한 실행에서 두 번 부르면 오류가 나서 병합이 깨진다.
+- **혼자서도 실행되는 개발 환경:** 서비스마다 `features/<서비스>/dev.py`를 두고 `streamlit run features/<서비스>/dev.py`로 단독 실행한다. 다른 서비스가 있어야 하는 입력은 목(mock)으로 대체한다.
+  - 한 끼(A): 날씨 → 목 날씨 데이터 (병합 시 팀원 E의 `get_weather(lat, lng)`로 교체)
+  - 손님(C): 끼니 기록 이벤트 → 테스트 버튼 (병합 시 `meal_logged { meal_log_id, slot, date }` 수신으로 교체. 전달 방식은 13장 미정)
+  - 홈(A): 각 서비스 요약 → 목 요약 (병합 시 각 서비스의 `get_today_summary()` 호출)
+- **테마 먼저 배포:** 팀원 A가 앱 골격, 테마(`.streamlit/config.toml`의 색·글꼴), 공통 컴포넌트와 스타일 헬퍼(`shared/`)를 11-05까지 먼저 배포한다. 각자 이것만 사용하고 색상·글꼴을 직접 적지 않는다. 서비스 페이지에서 자체 전역 CSS를 주입하지 않는다.
+- **접두사:** 페이지 `url_path`, `st.session_state` 키, 위젯 `key`, 저장소 테이블·파일 이름, 캐시 함수 이름에 서비스 접두사를 붙인다 (`meal_`, `reading_`, `guest_`, `fuel_`, `weather_`). 위젯 `key`가 겹치면 병합 때 `DuplicateWidgetID` 오류가 난다.
+- **외부 API 호출 코드:** `features/<서비스>/` 안(예: `clients/`)에 둔다. 키는 `st.secrets`에서 읽고 이름은 서비스별로 구분한다(`KAKAO_REST_KEY`, `OPINET_KEY`, `WEATHER_KEY` 등). 서버리스 프록시용 `api/` 폴더는 쓰지 않는다.
+- **패키지 의존성:** 루트 `requirements.txt` 한 곳에서 버전을 고정해 관리한다. 새 라이브러리를 추가할 때는 팀 채팅에 먼저 알리고, 같은 용도의 라이브러리는 하나만 쓴다 (병합 시 버전 충돌 방지).
+- **저장소(Git):** 이 `diary` Git 저장소 하나를 사용한다. 팀원 A가 1주차에 프로젝트 기본 골격(`app.py`, `pyproject.toml`, `requirements.txt`, `.streamlit/config.toml`, `shared/`, 서비스별 빈 패키지, `.gitignore`, `.streamlit/secrets.toml.example`)을 `main`에 먼저 올리고, 나머지 팀원은 이를 받아 자기 브랜치를 만든다. `.streamlit/secrets.toml`은 커밋하지 않는다.
+- **브랜치 전략:** `main` 보호(`main`이 곧 배포 브랜치), 서비스별 `feature/<서비스>` 브랜치에서 개발하고 병합 단계에서 순서대로 `main`에 합친다. 브랜치는 `main`에서 자주(주 1회 이상) 최신 내용을 받아와 병합 때 차이가 커지지 않게 한다. 병합 순서는 홈 → 날씨(E) → 한 끼(A) → 손님(C) → 독서(B) → JOOYOU(D)로 하되, 의존이 적은 순서로 조정할 수 있다.
 
-### Technology Stack (제안, 최종 결정은 Open Questions)
-**Frontend:** React + TypeScript + Vite, React Router, CSS 변수 기반 디자인 토큰
-**Backend:** Vercel/Cloudflare Functions 등 서버리스 프록시
-**Infrastructure:** 정적 호스팅, 로컬 저장소(MVP), 이후 Supabase 등 BaaS 검토
+### Technology Stack (확정)
+**언어:** Python 3.14 (`pyproject.toml`에 `requires-python = ">=3.14"`)
+**프레임워크:** Streamlit — `st.navigation`/`st.Page` 멀티페이지, `st.cache_data` 캐시, `st.secrets` 키 관리
+**외부 API 호출:** 서버(Python)에서 직접 호출한다. 별도 프록시는 두지 않는다. HTTP 클라이언트는 `requests` 또는 `httpx` 중 하나로 통일한다.
+**저장:** 미정 (13장)
+**배포:** Streamlit Community Cloud (GitHub `main` 연동)
+
+### 배포
+- GitHub `main`의 `app.py`를 메인 파일로 연결한다. `main`에 병합되면 배포가 갱신되므로, 병합 전에 로컬에서 `streamlit run app.py`로 전체 앱이 뜨는지 확인한다.
+- **Python 3.14 지정:** Community Cloud에서는 Advanced settings(또는 앱 설정)에서 Python 버전을 고른다. 포럼 보고에 따르면 `runtime.txt`·`.python-version`은 무시되고, 선택과 다른 버전으로 빌드된 사례도 있다. 공식 확인은 하지 못했으므로, 배포 후 앱 안에서 `sys.version`을 출력해 실제 버전을 검증한다.
+- 3.14에서 설치되지 않는 패키지가 있을 수 있어, 새 패키지는 3.14 설치 가능 여부를 먼저 확인한다. 의존성은 루트 `requirements.txt`에 버전을 고정한다.
+- Secrets는 Community Cloud 설정 화면에 `secrets.toml` 내용을 붙여 넣는다. 저장소에는 넣지 않는다.
+- 일정 시간 접속이 없으면 앱이 절전 상태가 될 수 있어 첫 접속이 느릴 수 있고, 그동안은 앱 코드가 실행되지 않는다. 따라서 JOOYOU 일별 평균가 스냅샷은 앱 안에서만으로는 매일 수집할 수 없다(R-13).
 
 ### External APIs
 | 용도 | API | 비고 |
@@ -418,16 +428,16 @@ So that 아침에 옷 고르는 시간을 줄이고 날씨에 맞게 입을 수 
 | 유가 | 한국석유공사 오피넷 무료 API | 인증키 발급 필요, 반경 조회는 KATEC 좌표 사용 |
 
 ### Data Model (초안)
-서비스별 테이블은 접두사로 구분한다(예: `meal_logs`, `reading_logs`, `guest_visits`, `fuel_logs`). 서비스 간 참조는 `GuestVisit.mealLogId` 하나뿐이며, 병합 전에는 목 ID로 테스트한다.
+저장 방식은 미정(13장)이며, 아래는 저장소와 무관한 데이터 구조다. 서비스별 테이블·키는 접두사로 구분한다(예: `meal_logs`, `reading_logs`, `guest_visits`, `fuel_logs`). 서비스 간 참조는 `GuestVisit.meal_log_id` 하나뿐이며, 병합 전에는 목 ID로 테스트한다.
 
-- `MealLog { id, date, slot(breakfast|lunch|dinner), menuName, source(recommend|manual), createdAt }`
-- `Guest { id, species(dog|cat), breedId, rarity }` — 정적 마스터 데이터
-- `GuestVisit { id, mealLogId, breedId, visitedAt }`
-- `CollectionCard { breedId, firstMetAt, metCount, loyaltyLevel }`
-- `Book { id(olid), title, authors, coverUrl, totalPages? }`
-- `ReadingLog { id, bookId, date, amountRead, goalAmount, oneLine? }`
-- `FuelLog { id, date, stationName, fuelType, pricePerLiter, liters, regionCode }`
-- `RegionAvgSnapshot { date, regionCode, fuelType, avgPrice }` — 비교용 일별 스냅샷
+- `MealLog { id, date, slot(breakfast|lunch|dinner), menu_name, source(recommend|manual), created_at }`
+- `Guest { id, species(dog|cat), breed_id, rarity }` — 정적 마스터 데이터
+- `GuestVisit { id, meal_log_id, breed_id, visited_at }`
+- `CollectionCard { breed_id, first_met_at, met_count, loyalty_level }`
+- `Book { id(olid), title, authors, cover_url, total_pages? }`
+- `ReadingLog { id, book_id, date, amount_read, goal_amount, one_line? }`
+- `FuelLog { id, date, station_name, fuel_type, price_per_liter, liters, region_code }`
+- `RegionAvgSnapshot { date, region_code, fuel_type, avg_price }` — 비교용 일별 스냅샷
 
 ### Menu Recommendation Logic (초안)
 - 입력: 시간대(끼니), 날씨(기온·강수), 공공 음식 데이터의 메뉴 태그
@@ -435,9 +445,10 @@ So that 아침에 옷 고르는 시간을 줄이고 날씨에 맞게 입을 수 
 - 룰 기반으로 시작하며, 규칙은 설정 파일로 분리해 조정 가능하게 한다.
 
 ### Security & Privacy
-- 모든 API 키는 서버리스 환경변수에 보관하고 프록시 엔드포인트에서 허용 도메인·요청 수를 제한한다.
-- 위치는 요청 시에만 전송하고 서버에 저장하지 않는다.
-- 사용자가 로컬 데이터를 전체 삭제할 수 있다.
+- 모든 API 키는 `st.secrets`로만 읽는다. 로컬은 `.streamlit/secrets.toml`(미커밋), 배포는 Community Cloud의 Secrets 설정에 둔다. 키 값을 화면·로그·에러 메시지에 출력하지 않는다.
+- 위치는 조회할 때만 쓰고 정밀 좌표를 저장하지 않는다.
+- 사용자가 자기 기록을 전체 삭제할 수 있다.
+- 배포 앱은 공개 URL이므로 개인정보와 키가 화면에 나오지 않는지 확인한다.
 
 ---
 
@@ -468,7 +479,7 @@ Home (다이어리 표지: 오늘 요약 카드 5개)
 ### Home Layout
 - 상단: 날짜, 인사말, 날씨 요약
 - 중단: 서비스 카드 5개(2열 격자, 카드당 아이콘·서비스명·오늘 상태 1줄)
-- 하단: 탭 내비게이션
+- 내비게이션: `st.navigation`(사이드바 또는 상단). 하단 탭은 Streamlit 기본 기능에 없어 별도 구현이 필요하므로 MVP에서는 쓰지 않음
 
 ### User Flows
 **끼니 기록 → 손님 방문:** 한 끼 페이지 → 메뉴 추천 → 메뉴 선택 → 기록 → 손님 방문 연출 → 도감 카드 확인
@@ -481,7 +492,7 @@ Home (다이어리 표지: 오늘 요약 카드 5개)
 - 본문 텍스트 대비 4.5:1 이상. 파스텔 배경 위 글자색은 짙은 톤을 사용한다.
 
 ### Responsive Design
-- Mobile 320~767px(기본), Tablet 768~1023px, Desktop 1024px 이상(중앙 정렬 다이어리 레이아웃)
+- 모바일 우선. `layout="centered"`를 기본으로 하고, 가로 배치(`st.columns`)는 좁은 화면에서 세로로 쌓여도 읽히게 구성한다. 데스크톱은 중앙 정렬 다이어리 레이아웃
 
 ---
 
@@ -524,15 +535,15 @@ Home (다이어리 표지: 오늘 요약 카드 5개)
 
 | 팀원 | 담당 서비스 | 공통 책임 | 주요 산출물 |
 |------|------------|-----------|-------------|
-| A (jvvy0901) | 홈 + 오늘의 한 끼 | 팀 리드, 디자인 토큰·공통 컴포넌트, 라우팅·내비게이션, 최종 통합, 메뉴 태그 데이터셋, 카카오 로컬 연동 | 홈 화면, 공통 UI 키트, 추천 로직·식당 목록·끼니 기록(Epic A·B) |
+| A (jvvy0901) | 홈 + 오늘의 한 끼 | 팀 리드, 테마(`config.toml`)·공통 컴포넌트, `app.py` 내비게이션, 최종 통합, 배포, 메뉴 태그 데이터셋, 카카오 로컬 연동 | 홈 화면, 공통 UI 키트, 추천 로직·식당 목록·끼니 기록(Epic A·B) |
 | B | 독서 챌린지 | Open Library 연동, 홈 지원(작업량 여유 시 공통 UI·일러스트 보조) | 책 추천·분량 체크·한 줄 감상(Epic C) |
 | C | 밥때 손님 | 손님·도감 일러스트와 확률표 | 방문 연출·도감·스트릭·단골 레벨(Epic D) |
 | D | JOOYOU | 좌표 변환(KATEC), 일별 평균가 스냅샷 | 주유소 조회·기록·평균 비교(Epic E) |
-| E | 날씨 + 코디 | 날씨 모듈(`getWeather`, 병합 시 홈·한 끼가 사용) | 날씨 상세·코디 추천·일러스트(Epic F) |
+| E | 날씨 + 코디 | 날씨 모듈(`get_weather`, 병합 시 홈·한 끼가 사용) | 날씨 상세·코디 추천·일러스트(Epic F) |
 
 **협업 규칙:**
 - 주 1회 전체 싱크(진행·막힌 점·계약 변경 공유), 주 2회 15분 비동기 스탠드업
-- 공통 영역(`shared/`, 디자인 토큰, 병합 단위 형태) 변경은 팀원 A와 영향받는 팀원의 합의 후 반영
+- 공통 영역(`app.py`, `shared/`, `.streamlit/config.toml`, 병합 단위 형태) 변경은 팀원 A와 영향받는 팀원의 합의 후 반영
 - 자기 서비스 폴더 밖의 파일은 수정하지 않는다. 필요하면 해당 담당자에게 요청한다.
 - 각자 `feature/<서비스>` 브랜치에서 개발하고, 중간 병합(11-19)과 최종 병합 때 PR → 1인 이상 리뷰 → `main` 병합. 직접 `main` 푸시 금지
 
@@ -540,14 +551,14 @@ Home (다이어리 표지: 오늘 요약 카드 5개)
 
 | Phase | Deliverables | Owner | Start | End |
 |-------|-------------|-------|-------|-----|
-| Discovery | PRD 확정, 역할·계약 확정, API 키 발급(카카오·오피넷·날씨), 샘플 호출 검증 | 전원(A 주관) | 10-22 | 10-29 |
-| Design | 디자인 토큰·공통 컴포넌트는 11-05까지 먼저 배포(A), 서비스별 화면, 손님 일러스트(C)·코디 일러스트(E) | 각 담당 | 10-29 | 11-12 |
+| Discovery | PRD 확정, 역할·계약 확정, API 키 발급(카카오·오피넷·날씨), 샘플 호출 검증, 데이터 저장 방식 결정, 골격 배포 시험(Python 3.14·Secrets) | 전원(A 주관) | 10-22 | 10-29 |
+| Design | 앱 골격·테마(`config.toml`)·공통 컴포넌트는 11-05까지 먼저 배포(A), 서비스별 화면, 손님 일러스트(C)·코디 일러스트(E) | 각 담당 | 10-29 | 11-12 |
 | Development | 서비스별 독립 개발(A·B·C·D·E 병렬, A는 한 끼와 홈을 함께 진행). 각자 단독 실행되는 상태로 P0 완료 | 각 담당 | 11-05 | 11-26 |
-| 중간 병합 | 홈 + 먼저 끝난 서비스 2~3개를 합쳐 라우팅·디자인 토큰·저장소 이름·패키지 충돌을 미리 점검 | A + 해당 담당 | 11-19 | 11-21 |
+| 중간 병합 | 홈 + 먼저 끝난 서비스 2~3개를 합쳐 페이지 경로·테마·위젯 key·저장소 이름·패키지 충돌을 미리 점검 | A + 해당 담당 | 11-19 | 11-21 |
 | 최종 병합 | 나머지 서비스 병합, 홈 요약 카드 연동, 날씨 모듈 연동(한 끼), 끼니 기록↔손님 연동, 목 데이터 제거 | A + 각 담당 | 11-26 | 12-03 |
 | QA | 서비스별 자체 테스트 후 교차 테스트(담당자 아닌 팀원이 점검), 접근성·반응형 | 전원 | 12-03 | 12-10 |
 | Beta | 지인 베타 10~20명 | A | 12-10 | 12-16 |
-| Launch | 배포 | A·E | 12-17 | 12-17 |
+| Launch | Streamlit Community Cloud 배포 (실제 Python 버전 3.14 확인 포함) | A·E | 12-17 | 12-17 |
 | Post-Launch | 지표 확인, P1(스트릭·단골 레벨 등 미완료분) 추가 | 전원 | 12-18 | - |
 
 ---
@@ -556,17 +567,19 @@ Home (다이어리 표지: 오늘 요약 카드 5개)
 
 | Risk | Impact | Probability | Mitigation |
 |------|--------|-------------|------------|
-| R-1. 오피넷이 "특정 과거 날짜의 지역 평균"을 충분히 제공하지 않을 수 있음(현재 평균·최근 7일 위주) | High | High | 일별 평균가를 프록시에서 매일 스냅샷으로 저장해 비교 기준을 자체 구축. 스냅샷 이전 기록은 "비교 데이터 없음" 처리 또는 입력 시점 평균으로 대체 |
+| R-1. 오피넷이 "특정 과거 날짜의 지역 평균"을 충분히 제공하지 않을 수 있음(현재 평균·최근 7일 위주) | High | High | 일별 평균가를 매일 스냅샷으로 저장해 비교 기준을 자체 구축(Streamlit 앱은 접속이 없으면 코드가 실행되지 않으므로 별도 수집 방식이 필요, R-13). 스냅샷 이전 기록은 "비교 데이터 없음" 처리 또는 입력 시점 평균으로 대체 |
 | R-2. Open Library의 한국어 책 데이터·쪽수 부족 | Medium | High | 주제 필터와 영문/한국어 혼합 허용, 쪽수 직접 입력, 직접 책 추가 기능 |
-| R-3. 외부 API 쿼터·장애 | Medium | Medium | 프록시 캐시, 카드 단위 폴백, 타임아웃 |
+| R-3. 외부 API 쿼터·장애 | Medium | Medium | `st.cache_data` 캐시, 카드 단위 폴백, 타임아웃 |
 | R-4. 일러스트 에셋(강아지·고양이 품종, 코디) 제작량 과다 | High | High | MVP는 품종 20종·코디 6구간으로 축소, 에셋은 직접 제작 또는 라이선스 확인된 소스만 사용 |
-| R-5. 위치 권한 거부 | Medium | Medium | 수동 지역 선택(FR-014) |
-| R-6. 로컬 저장만 쓰면 기기 변경 시 데이터 손실 | Medium | High | JSON 내보내기/가져오기 제공, Phase 2에서 로그인 동기화 |
+| R-5. 브라우저 위치를 가져오기 어려움(Streamlit 내장 기능 없음) 및 위치 권한 거부 | Medium | High | 수동 지역 선택을 기본으로 하고(FR-014), 서드파티 위치 컴포넌트는 선택 사항으로 검토 |
+| R-6. 서버 저장이 사라지거나 사용자별로 분리되지 않음(`st.session_state`는 새로고침 시 소실, Community Cloud 파일 저장 지속성 미확인) | High | High | 저장 방식을 Discovery에서 결정(13장), 저장 계층을 서비스별 `storage.py`로 분리해 교체 가능하게 하고, JSON 내보내기 제공 |
 | R-7. 공공 음식 데이터가 "메뉴 추천"용으로 정제돼 있지 않음 | Medium | Medium | MVP는 직접 큐레이션한 메뉴 목록(약 100개)에 태그를 달고 공공 데이터는 보강용으로 사용 |
-| R-8. 각자 따로 만든 페이지를 합칠 때 연결이 안 맞음(날씨→한 끼·홈, 끼니 기록→손님, 요약 카드 형태 불일치) | High | Medium | 병합 단위(`Page`·`routes`·`getTodaySummary`)와 이벤트 형태를 1주차에 확정하고, 개발 중에는 목으로 대체. 11-19 중간 병합으로 문제를 일찍 발견 |
+| R-8. 각자 따로 만든 페이지를 합칠 때 연결이 안 맞음(날씨→한 끼·홈, 끼니 기록→손님, 요약 카드 형태 불일치) | High | Medium | 병합 단위(`page`·`ROUTE`·`get_today_summary`)와 이벤트 형태를 1주차에 확정하고, 개발 중에는 목으로 대체. 11-19 중간 병합으로 문제를 일찍 발견 |
 | R-9. 담당자별 작업량 편차(A는 홈·공통·한 끼를 겸임, C의 일러스트·D의 평균가 스냅샷도 무거움) | Medium | High | 2주차 말 진행률 점검 후 일러스트 수 축소 또는 업무 재분배. 독서 챌린지(B)는 상대적으로 가벼우므로 B가 A의 공통 UI·C의 일러스트를 보조 |
-| R-10. 병합 시 충돌: 전역 스타일·폰트 덮어쓰기, 라우트 경로 중복, 저장소 키 중복, 패키지 버전 충돌, 서비스별 UI 불일치 | Medium | High | 디자인 토큰 11-05 선배포 및 하드코딩 색상 금지, 서비스 접두사(경로·저장소·키), 전역 CSS 금지(서비스 CSS는 모듈 단위), 새 패키지는 팀 공유 후 추가, 공통 영역은 팀원 A 승인 후 변경 |
+| R-10. 병합 시 충돌: `st.set_page_config` 중복 호출, 위젯 `key`·`session_state` 키 중복, 전역 CSS 덮어쓰기, `url_path` 중복, 저장소 키 중복, 패키지 버전 충돌, 서비스별 UI 불일치 | Medium | High | `set_page_config`는 `app.py`·`dev.py`에서만 호출, 서비스 접두사(경로·위젯 key·상태 키·저장소), 테마 11-05 선배포 및 하드코딩 색상·전역 CSS 금지, `requirements.txt` 단일 관리와 새 패키지는 팀 공유 후 추가, 공통 영역은 팀원 A 승인 후 변경 |
 | R-11. 일정 중 팀원 이탈·결원 | High | Low | 서비스마다 부담당자 1명을 지정(A↔B, C↔E, D↔B 등)하고 문서·계약을 저장소에 유지 |
+| R-12. Python 3.14 배포 호환: Community Cloud가 선택과 다른 Python 버전으로 빌드하거나, 일부 패키지가 3.14에서 설치되지 않을 수 있음 | High | Medium | Discovery에서 골격을 먼저 배포해 `sys.version` 확인, 패키지는 3.14 설치 가능 여부를 확인한 뒤 추가, `requirements.txt` 버전 고정, 문제가 생기면 팀 합의 후 Python 버전 조정 |
+| R-13. JOOYOU 일별 평균가 스냅샷을 앱만으로 매일 수집할 수 없음(접속이 없으면 앱이 실행되지 않음) | High | High | 외부 스케줄러(예: GitHub Actions)로 매일 수집해 저장소에 기록하는 방식을 검토, 저장 방식 결정(13장)과 함께 정한다. 수집 전 기간은 "비교 데이터 없음" 처리 |
 
 ---
 
@@ -578,20 +591,22 @@ Home (다이어리 표지: 오늘 요약 카드 5개)
 - [ ] 오피넷 API 인증키 발급
 - [ ] 기상청(공공데이터포털) 또는 OpenWeather 키
 - [ ] 폰트·일러스트 라이선스 확인
+- [ ] Streamlit Community Cloud 계정과 GitHub 저장소 연동
+- [ ] 사용할 패키지의 Python 3.14 설치 가능 여부 확인
 
 **Internal:**
-- [ ] 디자인 토큰 및 공통 컴포넌트 선배포 (팀원 A → 전원, 11-05까지) — 개발 중 유일하게 선행이 필요한 의존
-- [ ] 병합 단위 형태 확정 (`Page`·`routes`·`getTodaySummary`, 전원, 1주차)
+- [ ] 앱 골격·테마(`.streamlit/config.toml`)·공통 컴포넌트 선배포 (팀원 A → 전원, 11-05까지) — 개발 중 유일하게 선행이 필요한 의존
+- [ ] 병합 단위 형태 확정 (`page`·`ROUTE`·`get_today_summary`, 전원, 1주차)
 - [ ] 병합 시점에만 필요한 연결: 날씨 모듈(E → A), 끼니 기록 이벤트(A → C), 각 서비스 요약(B·C·D·E → A의 홈)
 - [ ] 메뉴 태그 데이터셋(A), 손님 품종 마스터 데이터(C)
 
 ### Assumptions
 - 팀은 5명이고 각자 학업·업무와 병행하므로, 팀원당 주 10~15시간 개발이 가능하다고 가정한다.
-- 각자 같은 기술 스택(React + TypeScript)으로 개발한다고 가정한다.
+- 모두 Python 3.14와 Streamlit으로 개발한다(확정). 배포는 Streamlit Community Cloud이며 `main`에 병합되면 갱신된다.
 - 코드는 `diary` Git 저장소 하나에서 관리한다. 서비스별 폴더와 브랜치로 나눠 작업하고 이 저장소의 `main`으로 병합한다.
 - 대상 지역은 대한민국이다(오피넷·카카오 로컬 특성).
-- MVP는 로그인 없는 단일 기기 사용이다.
-- 사용자는 브라우저 위치 권한을 허용할 수 있다.
+- MVP는 로그인 없이 시작하되, 저장 방식에 따라 사용자 구분이 필요해질 수 있다(13장).
+- 위치는 수동 지역 선택을 기본으로 한다. 브라우저 위치 조회는 선택 사항이다.
 - 끼니 기록은 하루 3칸(아침·점심·저녁)이고, 간식은 추천만 하고 기록하지 않는다.
 
 ---
@@ -601,9 +616,18 @@ Home (다이어리 표지: 오늘 요약 카드 5개)
 - [ ] **팀원별 역할 확정** (A~E에 실제 이름 매핑, 본인 희망 서비스 조율)
   - Context: 현재 배정은 제안안이며 일러스트가 많은 C, 평균가 스냅샷이 있는 D의 부담이 큼
   - Owner: 전원 / Deadline: Discovery 종료 전
-- [ ] **팀원별 기술 스택 숙련도 확인 후 스택 확정** (모두가 다룰 수 있는 스택인지)
-  - Options: 반응형 웹 React + TypeScript(제안) / 그 외
-  - Owner: 전원 / Deadline: Discovery 종료 전
+- [x] **기술 스택:** 확정 — Python 3.14 + Streamlit, Streamlit Community Cloud 배포. (7장 참고)
+- [ ] **데이터 저장 방식 (가장 시급)**
+  - Context: Streamlit은 서버에서 실행되어 "브라우저에 저장"이 안 된다. `st.session_state`는 새로고침 시 사라지고, Community Cloud의 파일 저장이 재시작·재배포 후 유지되는지는 확인하지 못했다. 사용자를 구분하지 않으면 모든 방문자가 같은 기록을 보게 된다. JOOYOU 평균가 스냅샷 수집(R-13)도 이 결정에 달려 있다.
+  - Options: 외부 DB(Supabase 등) + 간단한 사용자 구분 / SQLite 파일(시연용 임시) / 브라우저 저장 컴포넌트
+  - Owner: 전원(A 주관) / Deadline: Discovery 종료 전
+- [ ] **Python 3.14 배포 검증:** 골격을 먼저 배포해 실제 실행 Python 버전과 패키지 설치 여부를 확인한다. (R-12)
+  - Owner: 팀원 A / Deadline: 1주차
+- [ ] **위치 조회 방식:** 수동 지역 선택만 / 서드파티 위치 컴포넌트 추가
+  - Owner: 팀원 A·D·E / Deadline: Discovery 종료 전
+- [ ] **`meal_logged` 전달 방식:** 서비스 사이에서 이벤트를 어떻게 전달할지(`st.session_state`, 공유 함수 호출 등)
+  - Context: 저장 방식 결정과 함께 정해야 한다. 한 끼(A)가 발행하고 손님(C)이 받는다.
+  - Owner: 팀원 A·C / Deadline: 1주차
 - [ ] **협업 도구** (GitHub 이슈·프로젝트 보드, 디자인 공유용 Figma 등)
   - Owner: 팀원 A / Deadline: 1주차
 - [x] **저장소 구조:** 확정 — 이 `diary` Git 저장소 하나에서 서비스 폴더·브랜치로 나눠 작업하고 이 저장소로 병합한다. (7장 참고)
@@ -653,3 +677,4 @@ Home (다이어리 표지: 오늘 요약 카드 5개)
 | 0.3 | 2026-10-22 | jvvy0901 | 독서 챌린지를 팀원 A에서 분리해 팀원 B로 이관. 팀원 A는 홈·오늘의 한 끼 담당, 관련 계약·의존·위험·서명란 갱신 |
 | 0.4 | 2026-10-22 | jvvy0901 | "각자 페이지를 독립 개발한 뒤 병합" 방식으로 수정: 병합 단위 형태, 목 데이터 기반 단독 개발, 충돌 방지 규칙(폴더·접두사·토큰 선배포), 중간·최종 병합 일정, 병합 관련 위험과 오픈 질문 |
 | 0.5 | 2026-10-22 | jvvy0901 | 저장소를 `diary` Git 저장소 하나로 확정. 기본 골격 선행 커밋, 브랜치 갱신 주기, 팀원 초대·`main` 보호 과제 추가 |
+| 0.6 | 2026-10-22 | jvvy0901 | 기술 스택을 Python 3.14 + Streamlit(Community Cloud 배포)으로 변경: 병합 단위를 `page`/`ROUTE`/`get_today_summary`로 전환, `st.set_page_config`·위젯 key 규칙, `st.secrets` 키 관리, 배포 절차, 저장 방식·위치 조회·배포 호환 관련 위험과 오픈 질문 추가, 서버리스 프록시와 브라우저 저장 가정 삭제 |

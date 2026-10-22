@@ -3,7 +3,7 @@
 하루의 끼니·독서·주유·날씨 코디를 한 권의 귀여운 다이어리에 모아 기록하고 추천받는 웹앱입니다.
 파스텔 톤의 귀엽고 공주풍인 스타일로 만듭니다.
 
-> **상태: 기획 단계 (PRD v0.5).** 아직 실행할 수 있는 코드는 없습니다. 앱 골격은 1주차에 `main`에 올라올 예정입니다.
+> **상태: 기획 단계 (PRD v0.6).** 아직 실행할 수 있는 코드는 없습니다. 앱 골격은 1주차에 `main`에 올라올 예정입니다.
 
 ## 서비스 소개
 
@@ -19,48 +19,78 @@
 
 **서비스끼리 이어지는 부분:** 끼니를 기록하면 한 끼 추천 이력이 쌓이고 손님이 방문합니다. 날씨 데이터는 한 끼 추천과 코디 추천이 함께 씁니다.
 
-## 기술 스택 (제안, 확정 전)
+## 기술 스택
 
-- 프론트엔드: React + TypeScript + Vite, React Router
-- 서버: 서버리스 프록시(외부 API 키는 여기에만 보관)
-- 저장: 브라우저 IndexedDB (MVP는 로그인 없음)
+- 언어: **Python 3.14**
+- 프레임워크: **Streamlit** (`st.navigation` 멀티페이지)
+- 배포: **Streamlit Community Cloud** (GitHub `main` 연동)
+- 외부 API는 Python 서버에서 직접 호출하고, 키는 `st.secrets`로만 읽습니다.
+- 기록 저장 방식은 **아직 정하지 못했습니다.** Streamlit은 서버에서 실행되어 브라우저에 저장할 수 없고, 새로고침하면 세션 상태가 사라지기 때문입니다. PRD 13장의 가장 시급한 미정 항목입니다.
 
 ## 개발 방식
 
 5명이 서비스를 하나씩 맡아 **각자 독립적으로 만든 뒤, 이 저장소 하나로 병합**합니다.
 
-| 담당 | 서비스 | 폴더 |
+| 담당 | 서비스 | 위치 |
 |---|---|---|
-| 팀원 A | 홈 + 오늘의 한 끼 (공통 UI·병합 주관) | `shared/`, `features/meal` |
-| 팀원 B | 독서 챌린지 | `features/reading` |
-| 팀원 C | 밥때 손님 | `features/guest` |
-| 팀원 D | JOOYOU | `features/fuel` |
-| 팀원 E | 날씨 + 코디 | `features/weather` |
+| 팀원 A | 홈 + 오늘의 한 끼 (공통 UI·병합·배포 주관) | `app.py`, `shared/`, `features/meal/` |
+| 팀원 B | 독서 챌린지 | `features/reading/` |
+| 팀원 C | 밥때 손님 | `features/guest/` |
+| 팀원 D | JOOYOU | `features/fuel/` |
+| 팀원 E | 날씨 + 코디 | `features/weather/` |
 
 합칠 때 충돌하지 않도록 아래 규칙을 지킵니다.
 
 - 자기 서비스 폴더 밖의 파일은 수정하지 않습니다.
-- 각 서비스는 `Page`, `routes`, `getTodaySummary()` 세 가지만 밖으로 내보냅니다.
+- 각 서비스의 `__init__.py`는 `page()`, `ROUTE`, `get_today_summary()` 세 가지만 밖으로 내보냅니다.
+- `st.set_page_config`는 `app.py`와 단독 실행 파일(`dev.py`)에서만 호출합니다. 서비스의 `page()` 안에서는 호출하지 않습니다.
 - 다른 서비스가 필요한 입력은 개발 중에는 목(mock)으로 대체하고, 병합할 때 실제 연결로 바꿉니다.
-- 색·글꼴은 공통 디자인 토큰만 사용하고, 전역 CSS는 쓰지 않습니다.
-- 경로·저장소 키·서버 폴더에 서비스 접두사를 붙입니다(`meal_`, `reading_`, `guest_`, `fuel_`, `weather_`).
-- 새 라이브러리를 추가하기 전에 팀에 알립니다.
+- 위젯 `key`, `st.session_state` 키, 페이지 경로, 저장소 이름에 서비스 접두사를 붙입니다(`meal_`, `reading_`, `guest_`, `fuel_`, `weather_`). 겹치면 병합 때 오류가 납니다.
+- 색·글꼴은 `.streamlit/config.toml` 테마와 `shared/`의 스타일 헬퍼만 사용하고, 자체 전역 CSS는 넣지 않습니다.
+- 의존성은 루트 `requirements.txt` 한 곳에서 버전을 고정해 관리하고, 새 라이브러리를 추가하기 전에 팀에 알립니다.
 
-자세한 내용은 [PRD.md](./PRD.md) 7장과 10장을 참고하세요.
+자세한 내용은 [PRD.md](./PRD.md) 7장과 10장, 그리고 각 서비스 폴더의 `README.md`를 참고하세요.
 
 ### Git 사용법
 
-- `main`에는 직접 푸시하지 않습니다.
+- `main`에는 직접 푸시하지 않습니다. `main`이 곧 배포 브랜치입니다.
 - `feature/<서비스>` 브랜치에서 작업하고 Pull Request로 올립니다. 1명 이상 리뷰 후 병합합니다.
 - 병합 때 차이가 커지지 않도록 주 1회 이상 `main`의 최신 내용을 받아옵니다.
-- API 키가 들어 있는 `.env` 파일은 커밋하지 않습니다. 필요한 키 이름은 `.env.example`에 적습니다.
+- API 키가 들어 있는 `.streamlit/secrets.toml`은 커밋하지 않습니다. 필요한 키 이름은 `.streamlit/secrets.toml.example`에 적습니다.
+
+## 실행 방법
+
+앱 골격이 올라오면 확정합니다. 아래는 예정입니다.
+
+```bash
+python3.14 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+streamlit run app.py                     # 전체 앱
+streamlit run features/meal/dev.py       # 서비스 단독 실행 (오늘의 한 끼 예시)
+```
+
+필요한 API 키 (발급 후 `.streamlit/secrets.toml`에 설정):
+
+| 키 이름 | 용도 |
+|---|---|
+| `KAKAO_REST_KEY` | 카카오 로컬 API (주변 식당) |
+| `OPINET_KEY` | 오피넷 API (주유소 가격) |
+| `WEATHER_KEY` | 날씨 API |
+
+## 배포
+
+- Streamlit Community Cloud에서 GitHub `main`의 `app.py`를 메인 파일로 연결합니다. 배포 설정은 팀원 A가 합니다.
+- Python 버전은 배포 설정의 Advanced settings에서 3.14로 지정합니다. 포럼 보고에 따르면 `runtime.txt`와 `.python-version`은 무시되고, 선택과 다른 버전으로 빌드된 사례도 있어서 배포 후 앱 안에서 실제 Python 버전을 확인합니다.
+- API 키는 Community Cloud의 Secrets 설정 화면에 입력합니다. 저장소에는 넣지 않습니다.
+- 배포된 앱은 공개 URL입니다. 개인정보나 키가 화면에 나오지 않는지 확인합니다.
+- 일정 시간 접속이 없으면 앱이 절전 상태가 될 수 있어 첫 접속이 느릴 수 있습니다.
 
 ## 일정
 
 | 단계 | 기간 |
 |---|---|
-| 기획·API 키 발급·역할 확정 | 10-22 ~ 10-29 |
-| 디자인 (디자인 토큰은 11-05까지 먼저 배포) | 10-29 ~ 11-12 |
+| 기획·API 키 발급·역할 확정·저장 방식 결정·골격 배포 시험 | 10-22 ~ 10-29 |
+| 디자인 (앱 골격·테마는 11-05까지 먼저 배포) | 10-29 ~ 11-12 |
 | 서비스별 독립 개발 | 11-05 ~ 11-26 |
 | 중간 병합 | 11-19 ~ 11-21 |
 | 최종 병합 | 11-26 ~ 12-03 |
@@ -68,22 +98,11 @@
 | 베타 | 12-10 ~ 12-16 |
 | 출시 목표 | 12-17 |
 
-## 실행 방법
-
-앱 골격이 올라오면 이 항목에 설치·실행·테스트 명령을 채웁니다.
-
-필요한 API 키 (발급 후 `.env`에 설정):
-
-| 환경변수 | 용도 |
-|---|---|
-| `KAKAO_REST_KEY` | 카카오 로컬 API (주변 식당) |
-| `OPINET_KEY` | 오피넷 API (주유소 가격) |
-| `WEATHER_KEY` | 날씨 API |
-
 ## 문서
 
 - [PRD.md](./PRD.md) — 제품 요구사항 문서 (요구사항, 사용자 스토리, 일정, 위험, 미정 사항)
 - [CLAUDE.md](./CLAUDE.md) — AI 코딩 도우미(Claude Code)가 이 저장소에서 따를 규칙
+- `features/<서비스>/README.md` — 서비스별 담당자, 만들 것, 병합 규칙
 
 ## 만들지 않는 것
 

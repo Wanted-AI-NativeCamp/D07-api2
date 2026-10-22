@@ -11,10 +11,20 @@
 
 ## 주의
 - 오피넷이 과거 날짜의 지역 평균을 충분히 주지 않을 수 있다. 일별 평균가 스냅샷을 쌓는 방식을 먼저 검증한다. (PRD 11장 R-1)
+- Streamlit 앱은 접속이 없으면 코드가 실행되지 않아 앱만으로는 매일 수집할 수 없다. 외부 스케줄러 등 수집 방식은 저장 방식과 함께 정한다. (PRD 11장 R-13, 13장)
+- 현재 위치는 브라우저에서 바로 가져오기 어렵다. 수동 지역 선택을 기본으로 한다. (PRD FR-014)
 
 ## 병합 규칙
-- `index.ts`는 `Page`, `routes`, `getTodaySummary()`만 내보낸다. 홈 요약 카드에 최근 주유 요약을 보여줄 수 있게 한다.
-- 경로 `/fuel`, 저장소·로컬 키 접두사 `fuel_`, 서버 코드는 `api/fuel/`, API 키 이름은 `OPINET_KEY`
+- `__init__.py`는 `page()`, `ROUTE`, `get_today_summary()`만 내보낸다. `ROUTE = "fuel"`. 홈 요약 카드에 최근 주유 요약을 보여줄 수 있게 한다.
+- `st.set_page_config`는 `page()` 안에서 부르지 않는다. 단독 실행 파일 `dev.py`에서만 부른다.
+- 위젯 `key`, `st.session_state` 키, 저장소 이름에 `fuel_` 접두사를 붙인다.
+- 오피넷 호출 코드는 이 폴더의 `clients/`에 두고, 키(`OPINET_KEY`)는 `st.secrets`로만 읽는다. 주유소 조회 결과는 `st.cache_data(ttl=1800)`로 캐시한다.
+- 저장 방식은 미정(PRD 13장)이므로 저장 코드는 `storage.py` 한 파일에 모은다.
 - 다른 서비스와 직접 연결되는 부분은 없다. 단독으로 끝까지 동작해야 한다.
-- 색·글꼴은 `shared/`의 디자인 토큰만 쓰고, 전역 CSS는 쓰지 않는다.
+- 색·글꼴은 `.streamlit/config.toml` 테마와 `shared/` 스타일 헬퍼만 쓰고, 전역 CSS는 넣지 않는다.
 - 이 폴더 밖의 파일은 수정하지 않는다.
+
+## 단독 실행
+```bash
+streamlit run features/fuel/dev.py   # 앱 골격이 올라온 뒤 사용
+```
